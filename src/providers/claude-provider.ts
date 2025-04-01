@@ -1,5 +1,5 @@
 import "@anthropic-ai/sdk/shims/web";
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic, { ClientOptions } from "@anthropic-ai/sdk";
 import { APIError } from "@anthropic-ai/sdk";
 import { AIExcerptProvider, PromptType } from "../types";
 
@@ -34,7 +34,7 @@ export class ClaudeProvider implements AIExcerptProvider {
 			maxRetries: 3,
 			// Allow browser usage for Obsidian plugin environment
 			dangerouslyAllowBrowser: true,
-		});
+		} as ClientOptions);
 		this.model = model;
 		this.useStreaming = useStreaming;
 		this.promptType = promptType;
