@@ -1,0 +1,134 @@
+---
+description: This rule explains SvelteKit conventions and best practices for fullstack development.
+globs: **/*.js,**/*.ts,**/*.svelte
+alwaysApply: false
+---
+```md
+# Obsidian Plugin Cursor Rules
+
+This document defines the coding standards and best practices for building Obsidian plugins. Follow these guidelines to ensure consistency, performance, and maintainability.
+
+---
+
+## File Structure
+
+- **Entry Point:**  
+  - Use `main.ts` as the primary plugin entry point.  
+  - Extend Obsidian’s `Plugin` class and implement lifecycle methods (`onload()`, `onunload()`).
+
+- **Manifest & Metadata:**  
+  - Create a `manifest.json` with required fields such as `id`, `name`, `version`, and `minAppVersion`.
+
+- **Styles:**  
+  - Use a dedicated `styles.css` (or SCSS) for plugin-specific styling.
+
+- **Components & UI:**  
+  - Place reusable UI components in a dedicated folder (e.g., `src/components/`) using PascalCase for filenames.  
+  - When using frameworks like Svelte or React, include TypeScript (`<script lang="ts">` for Svelte) for strong typing.
+
+- **Utilities & Types:**  
+  - Organize utility functions in `src/utils/` and type definitions in `src/types/`.
+
+---
+
+## Plugin API & Lifecycle
+
+- **Initialization:**  
+  - Register commands, settings, and event listeners in `onload()`.  
+  - Clean up resources and UI elements in `onunload()`.
+
+- **Plugin Settings:**  
+  - Use Obsidian’s settings API to manage configuration, storing data locally when possible.
+
+---
+
+## UI & Interaction
+
+- **User Interface Consistency:**  
+  - Follow Obsidian’s UI guidelines for a native look and feel.  
+  - For UI components, refer to [About User Interface](https://docs.obsidian.md/Plugins/User+interface/About+user+interface).
+
+- **Deferred Views & Performance:**  
+  - Optimize load time by deferring initialization of heavy views.  
+  - See [Understanding Deferred Views](https://docs.obsidian.md/Plugins/Guides/Understanding+deferred+views) for guidance.
+
+- **Commands & Navigation:**  
+  - Register commands using the Obsidian API and handle navigation by opening views or modals through the workspace API.
+
+---
+
+## Component Patterns
+
+- **Naming Conventions:**  
+  - Use PascalCase for component filenames and ensure components are focused on a single responsibility.
+
+- **Framework Integration:**  
+  - When using Svelte, follow guidelines at [Use Svelte in your Plugin](https://docs.obsidian.md/Plugins/Getting+started/Use+Svelte+in+your+plugin).  
+  - For React integration, see [Use React in your Plugin](https://docs.obsidian.md/Plugins/Getting+started/Use+React+in+your+plugin).
+
+- **Type Safety:**  
+  - Leverage TypeScript for prop validation and overall type safety.
+
+---
+
+## Data Handling & External Integration
+
+- **Data Fetching:**  
+  - Use asynchronous functions with proper error handling for external API calls.
+  
+- **State Management:**  
+  - Prefer local component state for UI-specific state.  
+  - Use Obsidian’s internal data storage or external state management libraries only when necessary.
+
+---
+
+## Form Handling
+
+- **User Input:**  
+  - Design forms with progressive enhancement in mind; ensure basic functionality works without JavaScript if needed.
+  
+- **Validation:**  
+  - Implement validation on both client-side (for immediate feedback) and server-side if external services are involved.
+
+---
+
+## Error Handling & Performance
+
+- **Error Management:**  
+  - Wrap asynchronous operations in try/catch blocks.  
+  - Log errors and display user-friendly messages.
+
+- **Performance Optimizations:**  
+  - Minimize heavy operations during plugin initialization.  
+  - Optimize code paths and defer non-critical tasks to enhance load time.  
+  - Refer to [Optimizing Plugin Load Time](https://docs.obsidian.md/Plugins/Guides/Optimizing+plugin+load+time) for more details.
+
+---
+
+## Deployment
+
+- **Build Process:**  
+  - Use TypeScript compiler (`tsc`) and bundlers (Rollup/Webpack) to build the plugin.  
+  - Configure environment variables properly for different build targets.
+
+- **Release Guidelines:**  
+  - Ensure the manifest is correctly configured and follows Obsidian’s plugin submission guidelines.  
+  - See [Build a Plugin](https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin) and [Anatomy of a Plugin](https://docs.obsidian.md/Plugins/Getting+started/Anatomy+of+a+plugin) for reference.
+
+- **Mobile Development:**  
+  - Test plugin behavior on mobile platforms as outlined in [Mobile Development](https://docs.obsidian.md/Plugins/Getting+started/Mobile+development).
+
+---
+
+## Additional Resources
+
+- **Obsidian Sample Plugin:**  
+  [GitHub - obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin)
+
+- **Development Workflow:**  
+  [Development Workflow](https://docs.obsidian.md/Plugins/Getting+started/Development+workflow)
+
+---
+
+By following these rules, you will create well-structured, efficient, and maintainable plugins that integrate seamlessly with the Obsidian ecosystem.
+```
