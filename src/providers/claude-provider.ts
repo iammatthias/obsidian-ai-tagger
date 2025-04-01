@@ -3,6 +3,11 @@ import Anthropic, { ClientOptions } from "@anthropic-ai/sdk";
 import { APIError } from "@anthropic-ai/sdk";
 import { AIExcerptProvider, PromptType } from "../types";
 
+// Extend ClientOptions to include browser-specific options
+interface BrowserClientOptions extends ClientOptions {
+	dangerouslyAllowBrowser?: boolean;
+}
+
 /**
  * Claude AI provider implementation for generating tags
  */
@@ -26,7 +31,7 @@ export class ClaudeProvider implements AIExcerptProvider {
 		useStreaming = false,
 		promptType = PromptType.TAG_GENERATION
 	) {
-		this.client = new Anthropic({
+		const clientOptions: BrowserClientOptions = {
 			apiKey: apiKey,
 			// Set timeout to 60 seconds to prevent hanging requests
 			timeout: 60 * 1000,
@@ -34,7 +39,9 @@ export class ClaudeProvider implements AIExcerptProvider {
 			maxRetries: 3,
 			// Allow browser usage for Obsidian plugin environment
 			dangerouslyAllowBrowser: true,
-		} as ClientOptions);
+		};
+
+		this.client = new Anthropic(clientOptions);
 		this.model = model;
 		this.useStreaming = useStreaming;
 		this.promptType = promptType;
