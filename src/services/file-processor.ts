@@ -10,6 +10,7 @@ import {
 import { AIExcerptPlugin, AIExcerptSettings, LLMProvider } from "../types";
 import { ProviderFactory } from "../providers/provider-factory";
 import { FileUtils } from "../utils/file-utils";
+import { TagUtils } from "../utils/tag-utils";
 
 /**
  * Handles processing of files and directories to add or update excerpts
@@ -46,6 +47,33 @@ export class FileProcessor {
 		this.fileManager = fileManager;
 		this.settings = settings;
 		this.plugin = plugin || null;
+	}
+
+	private async enhanceTagConsistency(
+		generatedTags: string[]
+	): Promise<string[]> {
+		const existingTags = TagUtils.getAllVaultTags();
+		const enhancedTags = new Set<string>();
+
+		for (const tag of generatedTags) {
+			// Check if the exact tag already exists
+			if (existingTags.includes(tag)) {
+				enhancedTags.add(tag);
+				continue;
+			}
+
+			// Find similar tags
+			const similarTags = TagUtils.findSimilarTags(tag);
+			if (similarTags.length > 0) {
+				// Use the most similar existing tag
+				enhancedTags.add(similarTags[0]);
+			} else {
+				// If no similar tags found, use the new tag
+				enhancedTags.add(tag);
+			}
+		}
+
+		return Array.from(enhancedTags);
 	}
 
 	/**
@@ -95,7 +123,8 @@ export class FileProcessor {
 					const tags = await provider.generateTags(
 						contentWithoutFrontmatter
 					);
-					const formattedTags = this.formatTags(tags);
+					const enhancedTags = await this.enhanceTagConsistency(tags);
+					const formattedTags = this.formatTags(enhancedTags);
 
 					// For files without frontmatter, we need to add it
 					await this.vault.process(file, (data) => {
@@ -138,7 +167,8 @@ export class FileProcessor {
 				const tags = await provider.generateTags(
 					contentWithoutFrontmatter
 				);
-				const formattedTags = this.formatTags(tags);
+				const enhancedTags = await this.enhanceTagConsistency(tags);
+				const formattedTags = this.formatTags(enhancedTags);
 
 				// Use fileManager.processFrontMatter to safely update the frontmatter
 				await this.fileManager.processFrontMatter(
@@ -177,7 +207,10 @@ export class FileProcessor {
 						const tags = await fallbackResult.provider.generateTags(
 							contentWithoutFrontmatter
 						);
-						const formattedTags = this.formatTags(tags);
+						const enhancedTags = await this.enhanceTagConsistency(
+							tags
+						);
+						const formattedTags = this.formatTags(enhancedTags);
 
 						await this.fileManager.processFrontMatter(
 							file,

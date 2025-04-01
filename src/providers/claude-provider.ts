@@ -1,12 +1,8 @@
 import "@anthropic-ai/sdk/shims/web";
-import Anthropic, { ClientOptions } from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import { APIError } from "@anthropic-ai/sdk";
 import { AIExcerptProvider, PromptType } from "../types";
-
-// Extend ClientOptions to include browser-specific options
-interface BrowserClientOptions extends ClientOptions {
-	dangerouslyAllowBrowser?: boolean;
-}
+import { TagUtils } from "../utils/tag-utils";
 
 /**
  * Claude AI provider implementation for generating tags
@@ -31,17 +27,10 @@ export class ClaudeProvider implements AIExcerptProvider {
 		useStreaming = false,
 		promptType = PromptType.TAG_GENERATION
 	) {
-		const clientOptions: BrowserClientOptions = {
-			apiKey: apiKey,
-			// Set timeout to 60 seconds to prevent hanging requests
-			timeout: 60 * 1000,
-			// Set max retries for resilience to network issues
-			maxRetries: 3,
-			// Allow browser usage for Obsidian plugin environment
+		this.client = new Anthropic({
+			apiKey,
 			dangerouslyAllowBrowser: true,
-		};
-
-		this.client = new Anthropic(clientOptions);
+		});
 		this.model = model;
 		this.useStreaming = useStreaming;
 		this.promptType = promptType;
@@ -74,11 +63,20 @@ export class ClaudeProvider implements AIExcerptProvider {
 		try {
 			await this._enforceRateLimit();
 
+			// Get existing tags for context
+			const existingTags = TagUtils.getAllVaultTags();
+			const existingTagsContext =
+				existingTags.length > 0
+					? `\nExisting tags in the vault (use these for consistency when appropriate):\n${existingTags.join(
+							", "
+					  )}`
+					: "";
+
 			const response = await this.client.messages.create({
 				model: this.model,
 				max_tokens: 300,
 				temperature: 0.3,
-				system: "You are an expert at analyzing content and generating relevant, consistent tags that follow Obsidian's best practices. You understand the importance of maintaining a clean and useful tag hierarchy.",
+				system: "You are an expert at analyzing content and generating relevant, consistent tags that follow Obsidian's best practices. You understand the importance of maintaining a clean and useful tag hierarchy. When possible, reuse existing tags to maintain consistency across the knowledge base.",
 				messages: [
 					{
 						role: "user",
@@ -91,9 +89,11 @@ export class ClaudeProvider implements AIExcerptProvider {
 						- Focus on key topics, themes, and concepts
 						- Include both broad categories and specific details when relevant
 						- Maintain consistency with existing tag patterns
+						- Prioritize reusing existing tags when they fit the content
+						- Only create new tags when existing ones don't capture the concept
 						- Avoid overly generic tags that wouldn't be useful for filtering
 						- Limit to 3-7 most relevant tags unless content is highly complex
-						- Return ONLY the tags as a JSON array of strings
+						- Return ONLY the tags as a JSON array of strings${existingTagsContext}
 						
 						Content:
 						${content}`,

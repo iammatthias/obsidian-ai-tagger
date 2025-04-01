@@ -7,6 +7,7 @@ import { CommandsModal } from "./modals/commands-modal";
 import { FileProcessor } from "./services/file-processor";
 import { Prompts } from "./utils/prompts";
 import { ProviderFactory } from "./providers/provider-factory";
+import { TagUtils } from "./utils/tag-utils";
 
 /**
  * AI Tag Generator Plugin
@@ -41,7 +42,7 @@ export default class AITagGenerator extends Plugin implements AIExcerptPlugin {
 		try {
 			Prompts.initialize(this.app);
 
-			// Load all prompts into memory - primarily from plugin directory, with user customizations if they exist
+			// Load all prompts into memory
 			try {
 				await Prompts.loadAllPrompts();
 			} catch (error) {
@@ -57,7 +58,17 @@ export default class AITagGenerator extends Plugin implements AIExcerptPlugin {
 			);
 		}
 
-		// Initialize the provider factory for efficient provider management
+		// Initialize the tag utilities
+		try {
+			TagUtils.initialize(this.app);
+		} catch (error) {
+			console.error("Error initializing tag utilities:", error);
+			new Notice(
+				"Failed to initialize tag utilities. Tag consistency features may be limited."
+			);
+		}
+
+		// Initialize the provider factory
 		try {
 			ProviderFactory.initialize();
 		} catch (error) {

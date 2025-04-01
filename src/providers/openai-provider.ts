@@ -2,6 +2,7 @@ import "openai/shims/web";
 import OpenAI from "openai";
 import { APIError } from "openai";
 import { AIExcerptProvider, PromptType } from "../types";
+import { TagUtils } from "../utils/tag-utils";
 
 /**
  * OpenAI provider implementation for generating tags
@@ -35,13 +36,22 @@ export class OpenAIProvider implements AIExcerptProvider {
 
 	async generateTags(content: string): Promise<string[]> {
 		try {
+			// Get existing tags for context
+			const existingTags = TagUtils.getAllVaultTags();
+			const existingTagsContext =
+				existingTags.length > 0
+					? `\nExisting tags in the vault (use these for consistency when appropriate):\n${existingTags.join(
+							", "
+					  )}`
+					: "";
+
 			const response = await this.client.chat.completions.create({
 				model: this.model,
 				messages: [
 					{
 						role: "system",
 						content:
-							"You are an expert at analyzing content and generating relevant, consistent tags that follow Obsidian's best practices. You understand the importance of maintaining a clean and useful tag hierarchy.",
+							"You are an expert at analyzing content and generating relevant, consistent tags that follow Obsidian's best practices. You understand the importance of maintaining a clean and useful tag hierarchy. When possible, reuse existing tags to maintain consistency across the knowledge base.",
 					},
 					{
 						role: "user",
@@ -54,9 +64,11 @@ export class OpenAIProvider implements AIExcerptProvider {
 						- Focus on key topics, themes, and concepts
 						- Include both broad categories and specific details when relevant
 						- Maintain consistency with existing tag patterns
+						- Prioritize reusing existing tags when they fit the content
+						- Only create new tags when existing ones don't capture the concept
 						- Avoid overly generic tags that wouldn't be useful for filtering
 						- Limit to 3-7 most relevant tags unless content is highly complex
-						- Return ONLY the tags as a JSON array of strings
+						- Return ONLY the tags as a JSON array of strings${existingTagsContext}
 						
 						Content:
 						${content}`,
